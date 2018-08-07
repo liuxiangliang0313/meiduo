@@ -21,3 +21,21 @@ class RegisterUsernameCountAPIView(APIView):
             'username': username
         }
         return Response(context)
+
+
+class RegisterPhoneCountAPIView(APIView):
+    """
+    查询手机号的个数
+    GET: /users/phones/(?P<mobile>1[345789]\d{9})/count/
+    """
+
+    def get(self, request, mobile):
+        # 通过模型查询获取手机号个数
+        count = User.objects.filter(mobile=mobile).count()
+        # 组织数据
+        context = {
+            'count': count,
+            'phone': mobile
+        }
+
+        return Response(context)
