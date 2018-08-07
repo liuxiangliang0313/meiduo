@@ -24,7 +24,8 @@ SECRET_KEY = '7=%3(#9$qn9cr*(x24(nr1fi=o4=+e6=cq)fdcye3)tih9(3d@'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# 允许所有主机访问 '*'
+ALLOWED_HOSTS = ['127.0.0.1', 'api.meiduo.site']
 
 # 因为我们的子应用都放到了apps文件包中 所以我们需要告诉系统去哪里找子应用
 import sys
@@ -43,12 +44,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 注意
+    'corsheaders',
     'rest_framework',
     'users.apps.UsersConfig',
 
 ]
 
 MIDDLEWARE = [
+    # corsheaders加到最上边
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -59,7 +63,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'mall.urls'
-
 
 TEMPLATES = [
     {
@@ -204,5 +207,10 @@ REST_FRAMEWORK = {
 # AUTH_USER_MODEL参数的设置以点.来分隔，表示应用名.模型类名。
 AUTH_USER_MODEL = 'users.User'
 
-
-
+# CORS
+CORS_ORIGIN_WHITELIST = (
+    '127.0.0.1:8080',
+    'localhost:8080',
+    'www.meiduo.site:8080'
+)
+CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
