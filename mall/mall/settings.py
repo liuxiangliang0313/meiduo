@@ -15,7 +15,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
@@ -29,9 +28,10 @@ ALLOWED_HOSTS = []
 
 # 因为我们的子应用都放到了apps文件包中 所以我们需要告诉系统去哪里找子应用
 import sys
+
 # 我们给系统插入一条路径
 # path 路径是一个列表,我们把 拼接的路径放到第一个位置就可以
-sys.path.insert(0,os.path.join(BASE_DIR,'apps'))
+sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
 # Application definition
 
@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 注意
-    'users.apps.UsersConfig'
+    'rest_framework',
+    'users.apps.UsersConfig',
 
 ]
 
@@ -58,6 +59,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'mall.urls'
+
 
 TEMPLATES = [
     {
@@ -77,7 +79,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mall.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
@@ -88,10 +89,9 @@ DATABASES = {
         'PORT': 3306,  # 数据库端口
         'USER': 'root',  # 数据库用户名
         'PASSWORD': 'mysql',  # 数据库用户密码
-        'NAME': 'meiduo_sh_12'  # 数据库名字
+        'NAME': 'meiduo'  # 数据库名字
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -111,12 +111,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
 LANGUAGE_CODE = 'zh-Hans'
-
 
 TIME_ZONE = 'Asia/Shanghai'
 
@@ -126,12 +124,10 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
-
 
 # Redis
 CACHES = {
@@ -152,7 +148,6 @@ CACHES = {
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "session"
-
 
 LOGGING = {
     'version': 1,
@@ -198,4 +193,9 @@ REST_FRAMEWORK = {
     # 异常处理
     'EXCEPTION_HANDLER': 'utils.exceptions.exception_handler',
 }
+
+# AUTH_USER_MODEL参数的设置以点.来分隔，表示应用名.模型类名。
+AUTH_USER_MODEL = 'users.User'
+
+
 
