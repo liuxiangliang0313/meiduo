@@ -216,6 +216,9 @@ var vm = new Vue({
                     })
                     .then(response => {
                         // 保存后端返回的token数据
+                        // 记录用户的登录状态
+                        sessionStorage.clear();
+                        localStorage.clear();
                         localStorage.token = response.data.token;
                         localStorage.username = response.data.username;
                         localStorage.user_id = response.data.id;
