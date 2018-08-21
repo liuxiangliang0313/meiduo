@@ -165,3 +165,15 @@ class AddressViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Upda
             'limit': 20,
             'addresses': serializer.data,
         })
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        处理删除
+        """
+        address = self.get_object()
+
+        # 进行逻辑删除
+        address.is_deleted = True
+        address.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
