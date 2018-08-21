@@ -11,9 +11,13 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# 让django找到 apps这个包
+sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -24,7 +28,7 @@ SECRET_KEY = '7=%3(#9$qn9cr*(x24(nr1fi=o4=+e6=cq)fdcye3)tih9(3d@'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# 允许所有主机访问 '*'
+# 允许所有主机访问 '*' '127.0.0.1', 'api.meiduo.site'
 ALLOWED_HOSTS = ['127.0.0.1', 'api.meiduo.site']
 
 # 因为我们的子应用都放到了apps文件包中 所以我们需要告诉系统去哪里找子应用
@@ -44,14 +48,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 注意
-    'corsheaders',
-    'rest_framework',
     'users.apps.UsersConfig',
+    'rest_framework',
+    'corsheaders',
+    'oauth.apps.OauthConfig',
+    'areas.apps.AreasConfig',
 
 ]
 
 MIDDLEWARE = [
-    # corsheaders加到最上边
+    # corsheaders添加到最上边
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -95,6 +101,8 @@ DATABASES = {
         'NAME': 'meiduo'  # 数据库名字
     }
 }
+# AUTH_USER_MODEL参数的设置以点.来分隔，表示应用名.模型类名。
+AUTH_USER_MODEL = 'users.User'
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -154,7 +162,7 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
-    }
+    },
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "session"
@@ -202,6 +210,7 @@ LOGGING = {
 REST_FRAMEWORK = {
     # 异常处理
     'EXCEPTION_HANDLER': 'utils.exceptions.exception_handler',
+    # REST framework JWT配置
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
@@ -211,17 +220,48 @@ REST_FRAMEWORK = {
 import datetime
 
 JWT_AUTH = {
+    # JWT_EXPIRATION_DELTA 指明token的有效期
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
     'JWT_RESPONSE_PAYLOAD_HANDLER': 'utils.users.jwt_response_payload_handler',
 }
 
-# AUTH_USER_MODEL参数的设置以点.来分隔，表示应用名.模型类名。
-AUTH_USER_MODEL = 'users.User'
+AUTHENTICATION_BACKENDS = [
+    'utils.users.UsernameMobileAuthBackend',
+]
 
 # CORS
 CORS_ORIGIN_WHITELIST = (
     '127.0.0.1:8080',
     'localhost:8080',
-    'www.meiduo.site:8080'
+    'www.meiduo.site:8080',
 )
 CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
+
+# QQ登录参数
+
+QQ_APP_ID = '101474184'
+
+QQ_APP_KEY = 'c6ce949e04e12ecc909ae6a8b09b637c'
+
+QQ_REDIRECT_URL = 'http://www.meiduo.site:8080/oauth_callback.html'
+
+# 邮箱的配置信息
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.qq.com'
+EMAIL_PORT = 25
+# 发送邮件的邮箱
+EMAIL_HOST_USER = '396612599@qq.com'
+# 在邮箱中设置的客户端授权密码
+EMAIL_HOST_PASSWORD = 'ypeagqomawfzbgea'
+# 收件人看到的发件人
+EMAIL_FROM = '美多商城<396612599@qq.com>'
+
+# DRF扩展
+REST_FRAMEWORK_EXTENSIONS = {
+    # 缓存时间
+    'DEFAULT_CACHE_RESPONSE_TIMEOUT': 60 * 60,
+    # 缓存存储
+    'DEFAULT_USE_CACHE': 'default',
+}
+
+

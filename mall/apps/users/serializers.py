@@ -1,26 +1,32 @@
 # coding:utf8
 import re
 
-from django_redis import get_redis_connection
 from rest_framework import serializers
 from rest_framework_jwt.settings import api_settings
 
-from .models import User
+from .models import User, Address
+from django_redis import get_redis_connection
 
 
 class RegisterCreateSerializer(serializers.ModelSerializer):
-    # 用户再进行提交的时候有3个数据:校验密码,短信验证码,是否同意协议
-    # 所以,我们需要定义三个字段
+    """
+    1用户再进行提交的时候有3个数据:passwords,sms_code,allow
+    2进行校验:
+        2.1单个字段的校验有 手机号码,是否同意协议
+        2.2 多字段校验, 密码是否一致, 短信是否一致
+    """
+    # 1用户再进行提交的时候有3个数据:password2,sms_code,allow
     password2 = serializers.CharField(label='校验密码', allow_null=False, allow_blank=False, write_only=True)
-    sms_code = serializers.CharField(label='短信验证码', max_length=6, min_length=6, allow_null=False, allow_blank=False,
-                                     write_only=True)
+    sms_code = serializers.CharField(label='短信验证码', max_length=6, min_length=6,
+                                     allow_null=False, allow_blank=False, write_only=True)
     allow = serializers.CharField(label='是否同意协议', allow_null=False, allow_blank=False, write_only=True)
 
     token = serializers.CharField(label='登录状态token', read_only=True)  # 增加token字段
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'password', 'mobile', 'password2', 'sms_code', 'allow', 'token')
+        fields = ('id', 'username', 'password', 'mobile', 'password2', 'sms_code', 'allow',
+                  'token')
         extra_kwargs = {
             'id': {'read_only': True},
             'username': {
@@ -42,43 +48,46 @@ class RegisterCreateSerializer(serializers.ModelSerializer):
             }
         }
 
-        # 进行校验
-        # 单个字段的校验有 手机号码,是否同意协议
-        def validate_mobile(self, value):
-            if not re.match(r'1[345789]\d{9}', value):
-                raise serializers.ValidationError('手机号格式不正确')
-            return value
+    # 进行校验
+    # 2.1单个字段的校验有 手机号码,是否同意协议
+    def validate_mobile(self, value):
 
-        def validate_allow(self, value):
-            # 注意,前段提交的是否同意,我们已经转换为字符串
-            if value != 'true':
-                raise serializers.ValidationError('您未同意协议')
-            return value
+        if not re.match(r'1[3-9]\d{9}', value):
+            raise serializers.ValidationError('手机号码格式不正确')
+        return value
 
-        # 多字段校验, 密码是否一致, 短信是否一致
-        def validate(self, attrs):
+    def validate_allow(self, value):
 
-            # 比较密码
-            password = attrs['password']
-            password2 = attrs['password2']
+        if value != 'true':
+            raise serializers.ValidationError('您未同意协议')
+        return value
 
-            if password != password2:
-                raise serializers.ValidationError('密码不一致')
-            # 比较手机验证码
-            # 获取用户提交的验证码
-            code = attrs['sms_code']
-            # 获取redis中的验证码
-            redis_conn = get_redis_connection('code')
-            # 获取手机号码
-            mobile = attrs['mobile']
-            redis_code = redis_conn.get('sms_%s' % mobile)
-            if redis_code is None:
-                raise serializers.ValidationError('验证码过期')
+    # 2.2 多字段校验, 密码是否一致, 短信验证码是否一致
+    def validate(self, attrs):
 
-            if redis_code.decode() != code:
-                raise serializers.ValidationError('验证码不正确')
+        # 两次密码比较
+        password = attrs['password']
+        password2 = attrs['password2']
 
-            return attrs
+        if password != password2:
+            raise serializers.ValidationError('两次密码不一致')
+
+        # 短信验证码是否一致
+        # 获取用户提交的验证码
+        code = attrs['sms_code']
+        # 链接redis,获取redis中验证码
+        redis_connn = get_redis_connection('code')
+        # 获取手机号码
+        mobile = attrs['mobile']
+        redis_code = redis_connn.get('sms_%s' % mobile)
+        # 判断验证码是否存在
+        if redis_code is None:
+            raise serializers.ValidationError('验证码已过期')
+        # 判断短信验证码是否一致
+        if redis_code.decode() != code:
+            raise serializers.ValidationError('验证码不正确')
+
+        return attrs
 
     def create(self, validated_data):
 
@@ -101,3 +110,59 @@ class RegisterCreateSerializer(serializers.ModelSerializer):
         user.token = token
 
         return user
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    """
+    用户详细信息序列化器
+    """
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'mobile', 'email', 'email_active')
+
+
+class EmailSerializer(serializers.ModelSerializer):
+    """
+    邮箱序列化器
+    """
+
+    class Meta:
+        model = User
+        fields = ('id', 'email')
+        extra_kwargs = {
+            'email': {
+                'required': True
+            }
+        }
+
+    def update(self, instance, validated_data):
+        email = validated_data['email']
+        instance.email = validated_data['email']
+        instance.save()
+
+        # 发送激活邮件
+        # 生成激活链接
+        # verify_url = instance.generate_verify_email_url()
+        # # 发送,调用delay方法
+        # send_verify_mail.delay(email.verify_url)
+        return instance
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    province = serializers.StringRelatedField(read_only=True)
+    city = serializers.StringRelatedField(read_only=True)
+    district = serializers.StringRelatedField(read_only=True)
+    province_id = serializers.IntegerField(label='省ID', required=True)
+    city_id = serializers.IntegerField(label='市ID', required=True)
+    district_id = serializers.IntegerField(label='区ID', required=True)
+    mobile = serializers.RegexField(label='手机号', regex=r'^1[3-9]\d{9}$')
+
+    class Meta:
+        model = Address
+        exclude = ('user', 'is_deleted', 'create_time', 'update_time')
+
+    def create(self, validated_data):
+        # Address模型类中有user属性,将user对象添加到模型类的创建参数中
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)

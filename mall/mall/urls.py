@@ -20,6 +20,11 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     # /users/usernames/(?P<username>\w{5,20})/count/
     url(r'^users/', include('users.urls')),
-    # verifications/imagecodes/(?P<image_code_id>.+)/
+    #  verifications/imagecodes/(?P<image_code_id>.+)/
     url(r'^verifications/', include('verifications.urls')),
+    #   /oauth/qq/statues/
+    url(r'^oauth/', include('oauth.urls')),
+    # /areas/infos/
+    url(r'areas/', include('areas.urls')),
+
 ]

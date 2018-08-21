@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class VerificationConfig(AppConfig):
-    name = 'verification'
+class VerificationsConfig(AppConfig):
+    name = 'verifications'
