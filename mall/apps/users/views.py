@@ -148,3 +148,20 @@ class AddressViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Upda
             return Response({'message': '保存地址数量已达到上限'}, status=status.HTTP_400_BAD_REQUEST)
 
         return super().create(request, *args, **kwargs)
+
+    def list(self, request, *args, **kwargs):
+        """
+        获取用户地址列表
+        """
+        # 获取所有地址
+        queryset = self.get_queryset()
+        # 创建序列化器
+        serializer = self.get_serializer(queryset, many=True)
+        user = self.request.user
+        # 返回响应
+        return Response({
+            'user_id': user.id,
+            'default_address_id': user.default_address_id,
+            'limit': 20,
+            'addresses': serializer.data,
+        })
