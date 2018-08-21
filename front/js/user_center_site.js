@@ -217,9 +217,20 @@ var vm = new Vue({
                     console.log(error.response.data);
                 })
         },
-        // 设置默认地址
-        set_default: function (index) {
-
+         // 设置默认地址
+        set_default: function(index){
+            axios.put(this.host + '/users/addresses/' + this.addresses[index].id + '/status/', {}, {
+                    headers: {
+                        'Authorization': 'JWT ' + this.token
+                    },
+                    responseType: 'json'
+                })
+                .then(response => {
+                    this.default_address_id = this.addresses[index].id;
+                })
+                .catch(error => {
+                    console.log(error.response.data);
+                })
         },
         // 展示编辑标题
         show_edit_title: function (index) {

@@ -190,3 +190,13 @@ class AddressViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Upda
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+    @action(methods=['put'], detail=True)
+    def status(self, request, pk=None, address_id=None):
+        """
+        设置默认地址
+        """
+        address = self.get_object()
+        request.user.default_address = address
+        request.user.save()
+        return Response({'message': 'OK'}, status=status.HTTP_200_OK)
