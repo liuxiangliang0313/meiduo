@@ -166,3 +166,13 @@ class AddressSerializer(serializers.ModelSerializer):
         # Address模型类中有user属性,将user对象添加到模型类的创建参数中
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
+
+
+class AddressTitleSerializer(serializers.ModelSerializer):
+    """
+    地址标题
+    """
+
+    class Meta:
+        model = Address
+        fields = ('title',)

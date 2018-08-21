@@ -223,11 +223,33 @@ var vm = new Vue({
         },
         // 展示编辑标题
         show_edit_title: function (index) {
-
+            this.input_title = this.addresses[index].title;
+            for (var i = 0; i < index; i++) {
+                this.is_set_title.push(false);
+            }
+            this.is_set_title.push(true);
         },
         // 保存地址标题
         save_title: function (index) {
-
+            if (!this.input_title) {
+                alert("请填写标题后再保存！");
+            } else {
+                axios.put(this.host + '/users/addresses/' + this.addresses[index].id + '/title/', {
+                    title: this.input_title
+                }, {
+                    headers: {
+                        'Authorization': 'JWT ' + token
+                    },
+                    responseType: 'json'
+                })
+                    .then(response => {
+                        this.addresses[index].title = this.input_title;
+                        this.is_set_title = [];
+                    })
+                    .catch(error => {
+                        console.log(error.response.data);
+                    })
+            }
         },
         // 取消保存地址
         cancel_title: function (index) {

@@ -6,10 +6,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import User
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, UpdateAPIView
-from .serializers import RegisterCreateSerializer, UserDetailSerializer, EmailSerializer, AddressSerializer
+from .serializers import RegisterCreateSerializer, UserDetailSerializer, EmailSerializer, AddressSerializer, \
+    AddressTitleSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
+from rest_framework.decorators import action
 
 
 class RegisterUsernameCountAPIView(APIView):
@@ -177,3 +179,14 @@ class AddressViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Upda
         address.save()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=['put'], detail=True)
+    def title(self, request, pk=None, address_id=None):
+        """
+        修改标题
+        """
+        address = self.get_object()
+        serializer = AddressTitleSerializer(instance=address, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
